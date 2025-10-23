@@ -2,6 +2,11 @@ import os
 import json
 import time
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+import tkinter as tk
+from tkinter import ttk
 from dynamixel_sdk import *
 
 class MultiJointDynamixelController:
@@ -238,6 +243,11 @@ class SimpleAnimationPlayer:
         frames = self.animation_data["frames"]
         speed_factor = 1.0
         
+        times = []
+        target_positions = {motor_id: [] for motor_id in self.motor_ids}
+        actual_positions = {motor_id: [] for motor_id in self.motor_ids}
+        position_errors = {motor_id: [] for motor_id in self.motor_ids}
+        
         if animation_state:
             animation_state.update_progress(0, len(frames))
         
@@ -279,6 +289,22 @@ class SimpleAnimationPlayer:
                 
                 success = self.controller.set_multiple_positions_simultaneously(motor_positions)
                 
+                times.append(target_time)
+                current_actual = self.controller.read_positions(self.motor_ids)
+                
+                for motor_id in self.motor_ids:
+                    target_pos = motor_positions[motor_id]
+                    actual_pos = current_actual.get(motor_id)
+                    
+                    target_positions[motor_id].append(target_pos)
+                    actual_positions[motor_id].append(actual_pos)
+                    
+                    if actual_pos is not None:
+                        error = abs(target_pos - actual_pos)
+                        position_errors[motor_id].append(error)
+                    else:
+                        position_errors[motor_id].append(None)
+                
                 if i % 20 == 0:
                     motor_info = []
                     for motor_id in self.motor_ids:
@@ -308,10 +334,83 @@ class SimpleAnimationPlayer:
                 print(f"Motor {motor_id}: {base_pos} → {final_pos} "
                       f"(Total Movement: {total_movement} units, {total_movement*360/4096:.1f}°)")
             
+            self.plot_results(times, target_positions, actual_positions, position_errors)
+            
         except KeyboardInterrupt:
             print("\n\nAniamation stopped by user.")
         except Exception as e:
             print(f"\nError occured: {e}")
+    
+    def plot_results(self, times, target_positions, actual_positions, position_errors=None):
+        try:
+            root = tk.Tk()
+            root.title("Animation Results")
+            root.geometry("1200x800")
+            
+            main_frame = ttk.Frame(root)
+            main_frame.pack(fill=tk.BOTH, expand=1)
+            
+            canvas = tk.Canvas(main_frame)
+            canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+            
+            scrollbar = ttk.Scrollbar(main_frame, orient=tk.VERTICAL, command=canvas.yview)
+            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+            
+            canvas.configure(yscrollcommand=scrollbar.set)
+            
+            plot_frame = ttk.Frame(canvas)
+            canvas.create_window((0, 0), window=plot_frame, anchor="nw")
+            
+            fig = Figure(figsize=(12, 4*len(self.motor_ids)), dpi=100)
+            
+            for i, motor_id in enumerate(self.motor_ids):
+                ax1 = fig.add_subplot(len(self.motor_ids), 1, i + 1)
+                ax1.plot(times, target_positions[motor_id], 'b-', label=f'Target', linewidth=2)
+                
+                actual_times = []
+                actual_pos = []
+                for t, pos in zip(times, actual_positions[motor_id]):
+                    if pos is not None:
+                        actual_times.append(t)
+                        actual_pos.append(pos)
+                
+                if actual_times:
+                    ax1.plot(actual_times, actual_pos, 'r-', label=f'Actual', linewidth=1)
+                
+                ax1.set_xlabel('Time (seconds)')
+                ax1.set_ylabel('Position (units)')
+                ax1.set_title(f'Motor ID {motor_id} - Position Control')
+                ax1.legend()
+                ax1.grid(True)
+                
+                ax1_deg = ax1.twinx()
+                min_pos = min(target_positions[motor_id]) if target_positions[motor_id] else 0
+                max_pos = max(target_positions[motor_id]) if target_positions[motor_id] else 4096
+                ax1_deg.set_ylim(min_pos * 360 / 4096, max_pos * 360 / 4096)
+                ax1_deg.set_ylabel('Angle (degrees)')
+            
+            fig.tight_layout()
+            
+            canvas_plot = FigureCanvasTkAgg(fig, master=plot_frame)
+            canvas_plot.draw()
+            canvas_plot.get_tk_widget().pack()
+            
+            plot_frame.update_idletasks()
+            canvas.config(scrollregion=canvas.bbox("all"))
+            
+            def _on_mousewheel(event):
+                canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            
+            canvas.bind_all("<MouseWheel>", _on_mousewheel)
+            
+            save_button = ttk.Button(root, text="Save Figure", 
+                                    command=lambda: fig.savefig("animation_results.png", dpi=150, bbox_inches='tight'))
+            save_button.pack(side=tk.BOTTOM, pady=5)
+            
+            root.mainloop()
+            
+        except Exception as e:
+            print(f"Error plotting results: {e}")
     
     def play_animation_with_interrupt_check(self, animation_state):
         def check_interrupt():
@@ -330,8 +429,8 @@ if __name__ == "__main__":
         
         controller = MultiJointDynamixelController(port=port)
         
-        # Path   경로 설정
-        animation_folder = "your path/   애니메이션 폴더 경로/"
+        # Path 경로 설정
+        animation_folder = "your path/애니메이션 폴더 경로/"
         
         first_animation = True
         
