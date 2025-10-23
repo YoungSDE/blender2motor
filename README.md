@@ -1,5 +1,5 @@
 # Blender2Dynamixel
-> Export Blender animations and control Dynamixel motors in real-time
+> Export Blender animations and control Dynamixel motors
 
 ## 📋 Overview
 A system that exports animations from Blender and reproduces them on physical Dynamixel servo motors.
@@ -18,8 +18,8 @@ A system that exports animations from Blender and reproduces them on physical Dy
 
 ## 🛠️ Hardware Requirements
 - Dynamixel servo motors
-- USB2Dynamixel or U2D2 interface
-- Appropriate power supply for motors
+- USB2Dynamixel or U2D2
+- Appropriate power supply for motors (5V/12V)
 - **Set motors to Extended Position Mode**
 
 ## 📦 Software Requirements
