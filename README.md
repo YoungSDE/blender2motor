@@ -15,6 +15,11 @@ A system that exports animations from Blender and reproduces them on physical Dy
 - Dynamixel motor control system
 - Reads exported JSON and controls multiple motors
 
+### 'blender2motor.bat'
+- For easier use.
+- Currently, only for Windows.
+- Path in 'dynamixel_control.py' should be adjusted.
+
 ## 🛠️ Hardware Requirements
 - Dynamixel servo motors (Set Baudrate to 1000000; 1Mbps)
 - USB2Dynamixel or U2D2
