@@ -16,7 +16,7 @@ A system that exports animations from Blender and reproduces them on physical Dy
 - Reads exported JSON and controls multiple motors
 
 ## 🛠️ Hardware Requirements
-- Dynamixel servo motors
+- Dynamixel servo motors (Set Baudrate to 1000000; 1Mbps)
 - USB2Dynamixel or U2D2
 - Appropriate power supply for motors (5V/12V)
 - **Set motors to Extended Position Mode**
