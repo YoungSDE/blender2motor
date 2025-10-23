@@ -12,9 +12,8 @@ A system that exports animations from Blender and reproduces them on physical Dy
 - Run inside Blender to export keyframe data
 
 ### `dynamixel_control.py`
-- Real-time Dynamixel motor control system
-- Reads exported JSON and controls multiple motors simultaneously
-- Includes speed optimization and error monitoring
+- Dynamixel motor control system
+- Reads exported JSON and controls multiple motors
 
 ## 🛠️ Hardware Requirements
 - Dynamixel servo motors
