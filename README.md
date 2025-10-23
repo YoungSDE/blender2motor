@@ -34,4 +34,4 @@ A system that exports animations from Blender and reproduces them on physical Dy
   - `matplotlib`
 
 ## 🎥 Usage Guide
-Detailed setup and usage instructions are available in the video tutorial.
+Detailed setup and usage instructions are available in the video tutorial.(Should be uploaded very soon)
